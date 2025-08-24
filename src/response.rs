@@ -26,6 +26,17 @@ pub struct Response {
     body: String,
 }
 
+impl Default for Response {
+    fn default() -> Self {
+        Self {
+            status_code: 200,
+            status: "OK".to_string(),
+            content_type: ContentType::Text,
+            body: "".to_string(),
+        }
+    }
+}
+
 impl Response {
     pub fn html(status_code: u16, status: String, html: &str) -> Self {
         Self {
