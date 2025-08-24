@@ -47,10 +47,7 @@ impl Request {
         let method = HttpMethod::from_str(method_str)?;
 
         let mut path_part = start_line_parts.next().ok_or("Not found path")?.split("?");
-        let path = path_part
-            .next()
-            .ok_or("Not found path".to_string())?
-            .to_string();
+        let path = path_part.next().ok_or("Not found path".to_string())?.to_string();
 
         // 查询参数
         let mut args = HashMap::new();
@@ -89,6 +86,73 @@ impl Request {
     }
 }
 
+#[derive(Debug)]
+enum ContentType {
+    HTML,
+    JSON,
+    TEXT,
+}
+
+impl ToString for ContentType {
+    fn to_string(&self) -> String {
+        match self {
+            Self::HTML => "text/html".to_string(),
+            Self::TEXT => "text/plain".to_string(),
+            Self::JSON => "application/json".to_string(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Response {
+    status_code: u16,
+    status: String,
+    content_type: ContentType,
+    body: String,
+}
+
+impl Response {
+    pub fn html(status_code: u16, status: String, html: &str) -> Self {
+        Self {
+            status_code,
+            status,
+            content_type: ContentType::HTML,
+            body: html.to_string(),
+        }
+    }
+
+    pub fn json(status_code: u16, status: String, data: HashMap<&str, &str>) -> Self {
+        let body = serde_json::to_string(&data).unwrap();
+        Self {
+            status_code,
+            status,
+            content_type: ContentType::JSON,
+            body,
+        }
+    }
+
+    pub fn text(status_code: u16, status: String, text: String) -> Self {
+        Self {
+            status_code,
+            status,
+            content_type: ContentType::TEXT,
+            body: text,
+        }
+    }
+
+    pub fn make_response(&self) -> String {
+        // "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 11\r\n\r\nHello World"
+        format!(
+            "HTTP/1.1 {} {}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n{}",
+            self.status_code,
+            self.status,
+            self.content_type.to_string(),
+            self.body.len(),
+            self.body,
+        )
+    }
+}
+
 fn handle_connection(mut stream: TcpStream) -> Result<(), std::io::Error> {
     let mut buffer = [0; 2048];
     let bytes_read = stream.read(&mut buffer)?;
@@ -110,18 +174,24 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), std::io::Error> {
 
             // 简单的路由
             let response = if request.path == "/" {
-                "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 11\r\n\r\nHello World"
+                Response::text(200, "OK".to_string(), "hello gua".to_string())
+            } else if request.path == "/json" {
+                let mut data = HashMap::new();
+                data.insert("name", "bob");
+                data.insert("age", "18");
+                Response::json(200, "OK".to_string(), data)
+            } else if request.path == "/html" {
+                Response::html(200, "OK".to_string(), "<h1>hello gua</h1>")
             } else {
-                "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found"
+                Response::text(404, "Not Found".to_string(), "Not Found".to_string())
             };
 
-            stream.write_all(response.as_bytes())?;
+            stream.write_all(response.make_response().as_bytes())?;
         }
         Err(e) => {
             eprintln!("Failed to parse request: {e}");
-            let response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
-            stream.write_all(response.as_bytes())?;
+            let response = Response::text(400, "Bad Request".to_string(), "Bad Request".to_string());
+            stream.write_all(response.make_response().as_bytes())?;
         }
     }
 
