@@ -1,18 +1,19 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 #[derive(Debug)]
 enum ContentType {
-    HTML,
-    JSON,
-    TEXT,
+    Html,
+    Json,
+    Text,
 }
 
-impl ToString for ContentType {
-    fn to_string(&self) -> String {
+impl Display for ContentType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let charset = "charset=utf-8";
         match self {
-            Self::HTML => "text/html".to_string(),
-            Self::TEXT => "text/plain".to_string(),
-            Self::JSON => "application/json".to_string(),
+            Self::Html => write!(f, "text/html; {charset}"),
+            Self::Text => write!(f, "text/plain; {charset}"),
+            Self::Json => write!(f, "application/json; {charset}"),
         }
     }
 }
@@ -30,7 +31,7 @@ impl Response {
         Self {
             status_code,
             status,
-            content_type: ContentType::HTML,
+            content_type: ContentType::Html,
             body: html.to_string(),
         }
     }
@@ -40,7 +41,7 @@ impl Response {
         Self {
             status_code,
             status,
-            content_type: ContentType::JSON,
+            content_type: ContentType::Json,
             body,
         }
     }
@@ -49,7 +50,7 @@ impl Response {
         Self {
             status_code,
             status,
-            content_type: ContentType::TEXT,
+            content_type: ContentType::Text,
             body: text,
         }
     }
@@ -60,7 +61,7 @@ impl Response {
             "HTTP/1.1 {} {}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n{}",
             self.status_code,
             self.status,
-            self.content_type.to_string(),
+            self.content_type,
             self.body.len(),
             self.body,
         )
