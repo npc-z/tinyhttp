@@ -1,5 +1,6 @@
 use crate::{request::Request, response::Response};
 
+#[derive(Debug)]
 pub struct Context {
     pub req: Request,
     pub resp: Response,

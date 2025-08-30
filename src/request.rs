@@ -1,10 +1,19 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 #[derive(Debug)]
 pub enum HttpMethod {
     GET,
     POST,
     // 添加其他方法...
+}
+
+impl Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GET => write!(f, "GET"),
+            Self::POST => write!(f, "POST"),
+        }
+    }
 }
 
 impl FromStr for HttpMethod {
@@ -19,7 +28,7 @@ impl FromStr for HttpMethod {
     }
 }
 
-// #[derive(Debug)]
+#[derive(Debug)]
 pub struct Request {
     pub method: HttpMethod,
     pub path: String,
