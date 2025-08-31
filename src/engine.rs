@@ -23,6 +23,11 @@ impl Engine {
         }
     }
 
+    pub fn register_blueprint(&self, blueprint: &Blueprint) {
+        let mut bp = self.bp.write().unwrap(); // 获取写锁
+        bp.register_blueprint(blueprint);
+    }
+
     pub fn post(&self, path: &str, handler: HttpHandler) {
         // 需要获取可变引用或使用内部可变性
         let mut bp = self.bp.write().unwrap(); // 获取写锁

@@ -40,16 +40,39 @@ impl Blueprint {
         }
     }
 
+    /// 注册子路由组.
+    pub fn register_blueprint(&mut self, blueprint: &Self) {
+        let get_routes = blueprint.get_routes.read().unwrap();
+
+        for (path, handler) in get_routes.iter() {
+            self.get(path, handler.clone());
+        }
+
+        let post_routes = blueprint.post_routes.read().unwrap();
+        for (path, handler) in post_routes.iter() {
+            self.post(path, handler.clone());
+        }
+    }
+
+    pub fn get(&mut self, path: &str, handler: HttpHandler) {
+        self.add_handler(HttpMethod::GET, path, handler);
+    }
+
+    pub fn post(&mut self, path: &str, handler: HttpHandler) {
+        self.add_handler(HttpMethod::POST, path, handler);
+    }
+
+    fn jon_http_path(&self, p1: &str, p2: &str) -> String {
+        let pattern = format!("{p1}{p2}");
+        pattern.replacen("//", "/", 99)
+    }
+
     fn add_handler(&self, method: HttpMethod, path: &str, handler: HttpHandler) {
         let mut pattern = path.to_string();
-
         if !pattern.starts_with("/") {
             pattern = format!("/{pattern}");
         }
-
-        if self.prefix != "/" {
-            pattern = format!("{}{pattern}", self.prefix);
-        }
+        pattern = self.jon_http_path(&self.prefix, &pattern);
 
         match method {
             HttpMethod::GET => {
@@ -61,14 +84,6 @@ impl Blueprint {
                 r.insert(pattern, handler);
             }
         };
-    }
-
-    pub fn get(&mut self, path: &str, handler: HttpHandler) {
-        self.add_handler(HttpMethod::GET, path, handler);
-    }
-
-    pub fn post(&mut self, path: &str, handler: HttpHandler) {
-        self.add_handler(HttpMethod::POST, path, handler);
     }
 
     pub fn find_handler(&self, method: &HttpMethod, path: &str) -> Option<HttpHandler> {
