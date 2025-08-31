@@ -1,10 +1,16 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HttpMethod {
     GET,
     POST,
-    // 添加其他方法...
+    PUT,
+    DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS,
+    // CONNECT,
+    // TRACE,
 }
 
 impl Display for HttpMethod {
@@ -12,7 +18,28 @@ impl Display for HttpMethod {
         match self {
             Self::GET => write!(f, "GET"),
             Self::POST => write!(f, "POST"),
+            Self::PUT => write!(f, "PUT"),
+            Self::DELETE => write!(f, "DELETE"),
+            Self::PATCH => write!(f, "PATCH"),
+            Self::HEAD => write!(f, "HEAD"),
+            Self::OPTIONS => write!(f, "OPTIONS"),
         }
+    }
+}
+
+impl HttpMethod {
+    pub fn all() -> Vec<Self> {
+        vec![
+            HttpMethod::GET,
+            HttpMethod::POST,
+            HttpMethod::PUT,
+            HttpMethod::DELETE,
+            HttpMethod::PATCH,
+            HttpMethod::HEAD,
+            HttpMethod::OPTIONS,
+            // HttpMethod::CONNECT,
+            // HttpMethod::TRACE,
+        ]
     }
 }
 
@@ -23,6 +50,7 @@ impl FromStr for HttpMethod {
         match s.to_uppercase().as_str() {
             "GET" => Ok(HttpMethod::GET),
             "POST" => Ok(HttpMethod::POST),
+            "DELETE" => Ok(HttpMethod::DELETE),
             _ => Err(format!("Unsupported HTTP method: {s}")),
         }
     }

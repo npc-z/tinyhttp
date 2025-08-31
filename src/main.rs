@@ -14,7 +14,7 @@ fn main() -> std::io::Result<()> {
         }),
     );
 
-    app.get("/json", Arc::new(foo));
+    app.post("/json", Arc::new(foo));
 
     let mut user_bp = Blueprint::new("user_bp", "/user");
     user_bp.post(
@@ -37,7 +37,9 @@ fn main() -> std::io::Result<()> {
             ctx.resp = Response::text(200, "OK".to_string(), "post a new post".to_string());
         }),
     );
+    // dbg!(&user_post_bp);
     user_bp.register_blueprint(&user_post_bp);
+    // dbg!(&user_bp);
     app.register_blueprint(&user_bp);
 
     dbg!(&app);

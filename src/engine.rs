@@ -52,7 +52,7 @@ impl Engine {
                         // 在线程内部获取读锁
                         let bp_read = bp.read().unwrap();
 
-                        if let Err(e) = Self::handle_connection(&*bp_read, stream) {
+                        if let Err(e) = Self::handle_connection(&bp_read, stream) {
                             eprintln!("Error handling connection: {e}");
                         }
                     });
@@ -67,7 +67,7 @@ impl Engine {
 
     fn dispatch(bp: &Blueprint, ctx: &mut Context) {
         let path = &ctx.req.path;
-        let method = &ctx.req.method;
+        let method = ctx.req.method;
         println!("======= get {method} req for ({path})");
 
         // 尝试使用路由系统查找处理器
